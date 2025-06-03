@@ -1,0 +1,126 @@
+{
+	"info": {
+		"_postman_id": "05940207-13f7-47e4-82c6-451eb938e007",
+		"name": "SpellChecker",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "105052"
+	},
+	"item": [
+		{
+			"name": "Word Error Rate",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "reference",
+							"value": "Patient suffers from hypertension and diabetes. He was admitted to the hospital with chest pain.",
+							"type": "text"
+						},
+						{
+							"key": "original",
+							"value": "Patint sufers from hypertensoin and dibetes. He was admited to the hosptal with chets pain.",
+							"type": "text"
+						},
+						{
+							"key": "hypothesis",
+							"value": "patient surfers from hypertension and diabetes he was admitted to they hospital with cheats pain",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/wer",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"wer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Character Error Rate",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "reference",
+							"value": "Patient suffers from hypertension and diabetes. He was admitted to the hospital with chest pain.",
+							"type": "text"
+						},
+						{
+							"key": "original",
+							"value": "Patint sufers from hypertensoin and dibetes. He was admited to the hosptal with chets pain.",
+							"type": "text"
+						},
+						{
+							"key": "hypothesis",
+							"value": "patient surfers from hypertension and diabetes he was admitted to they hospital with cheats pain",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/cer",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"cer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Correct Spelling",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "text",
+							"value": "Patint sufers from hypertensoin and dibetes. He was admited to the hosptal with chets pain.",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/spell-correct",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"spell-correct"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
