@@ -2,8 +2,11 @@ from fastapi import FastAPI, Form, File, UploadFile
 from symspellpy import SymSpell, Verbosity
 from PIL import Image
 import pytesseract
+from difflib import SequenceMatcher
+import Levenshtein
 import os
 import io
+import re
 
 app = FastAPI()
 
@@ -19,6 +22,31 @@ if not os.path.exists(medical_dictionary_path):
 
 sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 sym_spell.load_dictionary(medical_dictionary_path, term_index=0, count_index=1)
+
+def normalize_text(text):
+    return re.sub(r'\s+', ' ', text).strip().lower()
+
+
+def correct_text(text):
+    words = text.split()
+    corrected_words = []
+    for word in words:
+        suggestions = sym_spell.lookup(word, Verbosity.CLOSEST, max_edit_distance=2)
+        corrected_words.append(suggestions[0].term if suggestions else word)
+    return " ".join(corrected_words)
+
+
+def calculate_wer(reference, hypothesis):
+    ref_words = reference.split()
+    hyp_words = hypothesis.split()
+    matcher = SequenceMatcher(None, ref_words, hyp_words)
+    edit_ops = matcher.get_opcodes()
+    total_edits = sum(1 for tag, _, _, _, _ in edit_ops if tag != 'equal')
+    return total_edits / len(ref_words) if ref_words else 1.0
+
+# Compute Character Error Rate
+def calculate_cer(reference: str, hypothesis: str) -> float:
+    return Levenshtein.distance(reference, hypothesis) / len(reference) if len(reference) > 0 else 1.0
 
 @app.post("/spell-correct/")
 async def spell_correct(text: str = Form(...)):
@@ -59,12 +87,62 @@ async def word_error_rate(reference: str, hypothesis: str):
     :param hypothesis: corrected text (e.g., from SymSpell)
     :return: calculates a rough word error rate (WER).
     """
-    from difflib import SequenceMatcher
-    ref_words = reference.split()
-    hyp_words = hypothesis.split()
+    ref_words = re.sub(r'\s+', ' ', reference).strip().lower().split()
+    hyp_words = re.sub(r'\s+', ' ', hypothesis).strip().lower().split()
     matcher = SequenceMatcher(None, ref_words, hyp_words)
     edit_distance = sum(tag != 'equal' for tag, _, _, _, _ in matcher.get_opcodes())
     return edit_distance / len(ref_words)
+
+@app.post("/character-error-rate/")
+async def character_error_rate(reference: str, hypothesis: str):
+    """
+    :param reference: ground truth text
+    :param hypothesis: corrected text (e.g., from SymSpell)
+    :return: calculates a rough character error rate (CER).
+    """
+    ref_words = re.sub(r'\s+', ' ', reference).strip().lower()
+    hyp_words = re.sub(r'\s+', ' ', hypothesis).strip().lower()
+    return Levenshtein.distance(ref_words, hyp_words) / len(ref_words) if len(ref_words) > 0 else 1.0
+
+@app.post("/wer/")
+async def wer(reference: str = Form(...), original: str = Form(...), hypothesis: str = Form(...)):
+    """
+        :param reference: ground truth text
+        :param original: original OCR extracted text
+        :param hypothesis: corrected text (e.g., from SymSpell)
+        :return: calculates a rough word error rate (WER) before and after correction.
+    """
+    ocr_text = normalize_text(original)
+    reference_text = normalize_text(reference)
+    corrected_text = normalize_text(hypothesis)
+
+    original_wer = calculate_wer(reference_text, ocr_text)
+    corrected_wer = calculate_wer(reference_text, corrected_text)
+
+    return {
+        "WER (Before Correction": f'{original_wer:.2%}',
+        "WER (After Correction": f'{corrected_wer:.2%}'
+    }
+
+@app.post("/cer/")
+async def cer(reference: str = Form(...), original: str = Form(...), hypothesis: str = Form(...)):
+    """
+        :param reference: ground truth text
+        :param original: original OCR extracted text
+        :param hypothesis: corrected text (e.g., from SymSpell)
+        :return: calculates a rough character error rate (CER) before and after correction.
+    """
+    ocr_text = normalize_text(original)
+    reference_text = normalize_text(reference)
+    corrected_text = normalize_text(hypothesis)
+
+    original_cer = calculate_cer(reference_text, ocr_text)
+    corrected_cer = calculate_cer(reference_text, corrected_text)
+
+    return {
+        "CER (Before Correction": f'{original_cer:.2%}',
+        "CER (After Correction": f'{corrected_cer:.2%}'
+    }
 
 
 # from fastapi import FastAPI, Query
