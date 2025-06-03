@@ -44,9 +44,7 @@ def word_error_rate(reference, hypothesis):
 
 # Compute Character Error Rate
 def character_error_rate(reference: str, hypothesis: str) -> float:
-    ref = normalize_text(reference)
-    hyp = normalize_text(hypothesis)
-    return Levenshtein.distance(ref, hyp) / len(ref) if len(ref) > 0 else 1.0
+    return Levenshtein.distance(reference, hypothesis) / len(reference) if len(reference) > 0 else 1.0
 
 
 # ----------- 3. INPUT EXAMPLES -----------
