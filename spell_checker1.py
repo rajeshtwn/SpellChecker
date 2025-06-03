@@ -2,6 +2,7 @@ from symspellpy import SymSpell, Verbosity
 from difflib import SequenceMatcher
 import os
 import re
+import Levenshtein
 
 # ----------- 1. SETUP SYMSPELL -----------
 sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
@@ -41,6 +42,12 @@ def word_error_rate(reference, hypothesis):
     total_edits = sum(1 for tag, _, _, _, _ in edit_ops if tag != 'equal')
     return total_edits / len(ref_words) if ref_words else 1.0
 
+# Compute Character Error Rate
+def character_error_rate(reference: str, hypothesis: str) -> float:
+    ref = normalize_text(reference)
+    hyp = normalize_text(hypothesis)
+    return Levenshtein.distance(ref, hyp) / len(ref) if len(ref) > 0 else 1.0
+
 
 # ----------- 3. INPUT EXAMPLES -----------
 # Replace these with your real data
@@ -60,6 +67,9 @@ corrected_text = correct_text(ocr_text)
 # ----------- 4. RESULTS -----------
 original_wer = word_error_rate(reference_text, ocr_text)
 corrected_wer = word_error_rate(reference_text, corrected_text)
+# Compute CERs
+original_cer = character_error_rate(reference_text, ocr_text)
+corrected_cer = character_error_rate(reference_text, corrected_text)
 
 print(f"📝 OCR Text:\n{ocr_text}")
 print(f"\n✅ Corrected Text:\n{corrected_text}")
@@ -67,3 +77,5 @@ print(f"\n🎯 Reference Text:\n{reference_text}")
 
 print(f"\n🔍 Word Error Rate (Before Correction): {original_wer:.2%}")
 print(f"🔧 Word Error Rate (After Correction):  {corrected_wer:.2%}")
+print(f"\n📉 Character Error Rate (Before Correction): {original_cer:.2%}")
+print(f"🔧 Character Error Rate (After Correction):  {corrected_cer:.2%}")
