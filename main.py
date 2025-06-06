@@ -8,8 +8,13 @@ import os
 import io
 import re
 from fastapi.middleware.cors import CORSMiddleware
+import requests
+import json
 
 app = FastAPI()
+
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL_NAME = "llama3"  # or "mistral" for faster results
 
 app.add_middleware(
     CORSMiddleware,
@@ -56,6 +61,30 @@ def calculate_wer(reference, hypothesis):
 # Compute Character Error Rate
 def calculate_cer(reference: str, hypothesis: str) -> float:
     return Levenshtein.distance(reference, hypothesis) / len(reference) if len(reference) > 0 else 1.0
+
+@app.post("/spell-correct-ollama/")
+async def spell_correct_ollama(text: str = Form(...)):
+    prompt = f"Correct the spelling and grammar in this sentence:\n{text}\nJust give me corrected text nothing else"
+    response = requests.post(OLLAMA_URL, json={"model": MODEL_NAME, "prompt": prompt})
+    print('RESPONSE_OLLAMA3', response.text, type(response))
+    response.raise_for_status()
+    # corrected_text = response.json().get("response", "").strip()
+
+    # Handle multiple JSON objects manually
+    responses = []
+    for line in response.text.strip().splitlines():
+        try:
+            data = json.loads(line)
+            responses.append(data.get("response", "").strip())
+        except json.JSONDecodeError:
+            continue
+
+    corrected_text = " ".join(responses)
+
+    return {
+        "original_text": text,
+        "corrected_text": corrected_text
+    }
 
 @app.post("/spell-correct/")
 async def spell_correct(text: str = Form(...)):
