@@ -121,6 +121,38 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Correct Spelling Ollama",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "text",
+							"value": "Patint sufers from hypertensoin and dibetes. He was admited to the hosptal with chets pain.",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/spell-correct-ollama",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"spell-correct-ollama"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
